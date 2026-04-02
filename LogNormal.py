@@ -1,0 +1,45 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Normal Distribution from Uniform distribution
+
+normal_samples = [] 
+log_normal_samples= [] 
+
+for i in range(1000):
+    unif_variab = np.random.uniform(1, 1.5, size=3)
+    normal_samples.append(np.sum(unif_variab))
+    log_normal_samples.append(np.prod(unif_variab))
+
+
+fig , ax = plt.subplots(1, 2, figsize=(8,3))
+count, bins, _ =ax[0].hist(normal_samples, bins=30, density=True, edgecolor=(1,1,1))
+
+normal_mean = np.mean(normal_samples)
+normal_sigma= np.std(normal_samples)
+
+x_normal= np.linspace(start=np.min(bins), stop=np.max(bins), num=200)
+
+pdf_normal= 1/(normal_sigma  * np.sqrt(2 * np.pi)) * np.exp(- ((x_normal- normal_mean)**2)/(2 * normal_sigma**2))
+
+ax[0].plot(x_normal, pdf_normal, color='red')
+ax[0].set_title("Normal distribution resulted from a uniform distribution", fontsize=7)
+ax[0].set_ylabel("Probability density", fontsize=8)
+
+
+# Log Normal Distribution from Uniform distribution
+
+log_mean= np.mean(np.log(log_normal_samples))
+log_sigma= np.std(np.log(log_normal_samples))
+
+count1, bins1, _ = ax[1].hist(log_normal_samples, bins=30, density= True, edgecolor=(1,1,1))
+x_log= np.linspace(start= np.min(bins1), stop= np.max(bins1), num=200)
+pdf_log= 1/(x_log * log_sigma * np.sqrt(2 * np.pi)) * np.exp( - (( np.log(x_log) - log_mean)**2)/( 2* log_sigma**2) )
+
+ax[1].plot(x_log, pdf_log, color="red")
+ax[1].set_title("Log Normal distribution resulted from a uniform distribution", fontsize=7)
+ax[1].set_ylabel("Probability density", fontsize=8)
+plt.show()
+print(f"{normal_mean:.4f}")
+print(f"{normal_sigma:.4f}")
