@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-mosaic=[['PDF','Hist'],['PDF','Hist']]
-fig , ax = plt.subplot_mosaic(mosaic, figsize=(7,3), layout= None, width_ratios=[1.1,1])
+mosaic = [['PDF','Hist'], ['PDF','Hist']]
+fig, ax = plt.subplot_mosaic(mosaic, figsize=(7,3), gridspec_kw={"width_ratios": [1.1, 1]})  # type: ignore
 mu, sigma = 1.2, 2.3
 
 # Probability Density Function
