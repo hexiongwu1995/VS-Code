@@ -1,8 +1,62 @@
 import matplotlib.pyplot as plt
 import numpy as np
+# Required to explicitly type-annotate the axes dictionary.
+# Without this import, Pylance cannot resolve 'Axes' as a type.
+from matplotlib.axes import Axes
+# 'cast' is a zero-cost typing helper: it has NO runtime effect,
+# but tells Pylance to treat a value as a specific type.
+from typing import cast
 
 mosaic = [['PDF','Hist'], ['PDF','Hist']]
-fig, ax = plt.subplot_mosaic(mosaic, figsize=(7,3), width_ratios= [1.1, 1] ) 
+fig, ax = plt.subplot_mosaic(mosaic, figsize=(7,3), width_ratios= [1.1, 1] )
+# --- Why cast() is needed here ---
+# plt.subplot_mosaic() returns dict[str, Any] according to matplotlib's
+# type stubs (*.pyi files), because the keys depend on runtime input and
+# cannot be statically determined.
+#
+# If you use a variable annotation instead:
+#   ax: dict[str, Axes]          # annotation
+#   fig, ax = plt.subplot_mosaic(...)  # assignment
+# Pylance merges the annotated type with the inferred type, producing
+# dict[str, Any | Axes].  As a result, ax['PDF'].plot is typed as
+# 'Any | (...) -> list[Line2D]', which breaks IntelliSense formatting.
+#
+# cast(dict[str, Axes], ax) tells Pylance:
+#   "Treat 'ax' as exactly dict[str, Axes] — do NOT union with Any."
+# This makes ax['PDF'] resolve cleanly as Axes, so hovering over .plot()
+# or .hist() shows well-formatted signatures identical to .scatter().
+
+ax = cast(dict[str, Axes], ax)
+
+# --- What does "dict[str, Axes]" mean? ---
+# dict[KeyType, ValueType] is Python's generic type annotation syntax for
+# dictionaries.  It specifies the exact types of keys and values:
+#
+#   dict[str, Axes]
+#    │         └─ ValueType: every value is a matplotlib Axes object
+#    └─────────── KeyType:   every key is a string
+#
+# After plt.subplot_mosaic(), 'ax' holds a plain Python dict whose keys are
+# the subplot labels you defined in 'mosaic', and whose values are the
+# corresponding Axes instances, e.g.:
+#
+#   ax = {
+#       'PDF':  <Axes object>,   # key='PDF'  (str),  value=Axes
+#       'Hist': <Axes object>    # key='Hist' (str),  value=Axes
+#   }
+#
+# Why not just write "dict" without [str, Axes]?
+#
+#   Annotation          | What Pylance knows about ax['PDF']
+#   -------------------|--------------------------------------
+#   dict                | unknown — no type info at all
+#   dict[str, Any]      | it's something, but methods are unresolved
+#   dict[str, Axes]     | it is an Axes object → full IntelliSense available
+#
+# Providing the precise value type 'Axes' is what enables Pylance to show
+# well-formatted hover documentation for ax['PDF'].plot(), ax['Hist'].hist(),
+# etc., identical to what you see for ax.scatter() when ax is a plain Axes.
+
 mu, sigma = 1.2, 2.3
 
 # Probability Density Function
